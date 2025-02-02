@@ -2,19 +2,36 @@ version: '3.9'
 
 services:
   redis:
-    container_name: redis-db
+    container_name: stockfilter-redis-db
     image: redis:latest
-    ports: 
-      - 6379:6379
     restart: unless-stopped
+    ports:
+      - 6379:6379
+    environment:
+        REDIS_DISABLE_DEFAULT_USER: true
+        REDIS_USERNAME: root
+        REDIS_PASSWORD: wgUn4Mlryn3tGiRns45ak83iaGXcH0xy
     volumes:
       - redis:/data
 
+  mongodb:
+    container_name: stockfilter-mongodb
+    image: mongo:latest
+    restart: unless-stopped
+    ports:
+      - 50000:27017
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: stockfilter-app
+        MONGO_INITDB_ROOT_PASSWORD: wgUn4Mlryn3tGiRns45ak83iaGXcH0xy
+    volumes:
+      - mongodb:/data
+
   app:
-    container_name: stock-filter-app
+    container_name: stockfilter-app
     build: .
+    restart: unless-stopped
     ports: 
-      - 3002:3000
+      - 3003:3000
     volumes:
       - public:/app/public
     environment:
@@ -23,10 +40,13 @@ services:
       YAHOO_FINANCE_URL: 'https://finance.yahoo.com/quote'
       REDIS_URL: redis://redis:6379
       NODE_ENV: 'production'
-      FETCH_ON_START: '1'
+      FETCH_ON_START: 1
+      MONGODB_URL: 'mongodb://stockfilter-app:wgUn4Mlryn3tGiRns45ak83iaGXcH0xy@mongodb:27017/yahoo-scraper?authSource=admin'
     depends_on:
       - redis
+      - mongodb
 
 volumes:
   redis: {}
   public: {}
+  mongodb: {}

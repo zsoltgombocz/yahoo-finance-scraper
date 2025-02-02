@@ -18,6 +18,9 @@ RUN npm install typescript -g
 
 COPY . .
 
+RUN mv ./send-to-discord.sh /etc/cron.daily/send-to-discord.sh
+RUN chmod +x /etc/cron.daily/send-to-discord.sh
+
 RUN npm run tsc
 
 CMD ["npm", "run", "start:prod"]
