@@ -5,8 +5,6 @@ services:
     container_name: stockfilter-redis-db
     image: redis:latest
     restart: unless-stopped
-    ports:
-      - 6379:6379
     environment:
         REDIS_DISABLE_DEFAULT_USER: true
         REDIS_USERNAME: root
@@ -18,8 +16,6 @@ services:
     container_name: stockfilter-mongodb
     image: mongo:latest
     restart: unless-stopped
-    ports:
-      - 50000:27017
     environment:
         MONGO_INITDB_ROOT_USERNAME: stockfilter-app
         MONGO_INITDB_ROOT_PASSWORD: wgUn4Mlryn3tGiRns45ak83iaGXcH0xy
