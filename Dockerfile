@@ -10,6 +10,14 @@ RUN apt-get install -yyq gconf-service lsb-release wget xdg-utils
 
 RUN apt-get install -yyq fonts-liberation
 
+RUN apt-get install -yyq cron
+
+RUN apt-get install -yyq supervisor
+
+RUN apt-get install -yyq nano
+
+RUN echo "0 0 18 * * /etc/cron.d/send-to-discord >> /var/log/send-to-discord.log 2>&1"
+
 WORKDIR /app
 COPY package*.json .
 
@@ -18,9 +26,14 @@ RUN npm install typescript -g
 
 COPY . .
 
-RUN mv ./send-to-discord.sh /etc/cron.daily/send-to-discord.sh
-RUN chmod +x /etc/cron.daily/send-to-discord.sh
+RUN mv ./send-to-discord.sh /usr/local/sbin/send-to-discord
+RUN chmod +x /usr/local/sbin/send-to-discord
+
+RUN echo "59 23 20 * * root /usr/local/sbin/send-to-discord >> /var/log/send-to-discord.log 2>&1" >> /etc/cron.d/send-to-discord-cron 
+
+RUN chmod 0644 /etc/cron.d/send-to-discord-cron
 
 RUN npm run tsc
 
-CMD ["npm", "run", "start:prod"]
+CMD ["supervisord", "-c", "/app/supervisord.conf"]
+#CMD ["npm", "run", "start:prod"]

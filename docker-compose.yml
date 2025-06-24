@@ -34,10 +34,10 @@ services:
       FINVIZ_BASE_URL: 'https://finviz.com/screener.ashx?v=111&f=cap_smallover&o=company'
       FINVIZ_EXCLUDE_URL: 'https://finviz.com/screener.ashx?v=111&f=cap_small,sec_financial&o=company'
       YAHOO_FINANCE_URL: 'https://finance.yahoo.com/quote'
-      REDIS_URL: 'redis://127.0.0.1:6379'
+      REDIS_URL: 'redis://redis:6379'
       NODE_ENV: 'production'
       FETCH_ON_START: 1
-      MONGODB_URL: 'mongodb://stockfilter-app:wgUn4Mlryn3tGiRns45ak83iaGXcH0xy@127.0.0.1:27017/yahoo-scraper?authSource=admin'
+      MONGODB_URL: 'mongodb://stockfilter-app:wgUn4Mlryn3tGiRns45ak83iaGXcH0xy@mongodb:27017/yahoo-scraper?authSource=admin'
     depends_on:
       - redis
       - mongodb
