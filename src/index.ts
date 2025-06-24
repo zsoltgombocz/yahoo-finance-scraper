@@ -20,7 +20,6 @@ try {
     app.listen(PORT, async (): Promise<void> => {
         logger.info(`APP: Connected successfully on port ${PORT}`);
 
-        await client.connect();
         connectToMongoDB();
 
         const finvizService = await new FinvizService(process.env.FINVIZ_BASE_URL, process.env.FINVIZ_EXCLUDE_URL).create();
