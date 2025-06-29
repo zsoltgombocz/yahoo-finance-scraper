@@ -47,6 +47,15 @@ export default class ServiceWrapper implements ServiceWrapperInterface {
             }
 
         }
+
+        if (process.env.FORCE_GENERATE_EXCEL === "1") {
+            try {
+                logger.info(`[SERVICE-WRAPPER]: Force generating excel for current month...`);
+                this.generateExcel();
+            } catch (error) {
+                logger.info(`[SERVICE-WRAPPER-RUN]: ${error}`);
+            }
+        }
     }
 
     saveFinvizStocks = async () => {
