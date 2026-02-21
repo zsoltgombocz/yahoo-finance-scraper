@@ -195,16 +195,77 @@ class YahooService extends Service implements YahooServiceInterface {
         }
     }
 
+    #getCurrentPrice = async (stock: string): Promise<Number|null> => {
+        try {
+            let page: Page | undefined;
+
+            const url = `${this.yahooFinanceUrl}/${stock}/?p=${stock}`;
+            page = await getPage(url);
+
+            await acceptCookie(page);
+
+            await page.setViewport({ width: 1080, height: 1024 });
+
+            await page.waitForSelector('span[data-testid="qsp-price"]', { timeout: 60_000 });
+
+            const price = await page.$eval('span[data-testid="qsp-price"]', element => element.innerHTML);
+
+            await page.close();
+
+            if(isNaN(parseFloat(price))) {
+                return null;
+            }
+
+            return parseFloat(price);
+        } catch (error: any) {
+            logger.error(`SERVICE[${this.signature}]: Error while getting price: ${error}`);
+            throw new Error(error);
+        }
+    }
+
+    #getPricePerBook = async (stock: string): Promise<Number|null> => {
+        let page: Page | undefined;
+
+        try {
+            const url = `${this.yahooFinanceUrl}/${stock}/key-statistics`;
+            page = await getPage(url);
+
+            await acceptCookie(page);
+
+            await page.setViewport({ width: 1080, height: 1024 });
+
+            await page.waitForSelector('section.main', { timeout: 60_000 });
+
+            const pricePerBook = await page.$eval('table.table tr:nth-child(7) td:nth-child(2)', element => element.innerHTML);
+
+            await page.close();
+
+            if(isNaN(parseFloat(pricePerBook))) {
+                return null;
+            }
+
+            return parseFloat(pricePerBook);
+        } catch (error: any) {
+            await page?.close();
+            logger.error(`SERVICE[${this.signature}]: Error while getting price per book`);
+            throw new Error(error);
+        }
+    }
+
     getFinancialData = async (stock: string): Promise<FinancialInterface | {message: String, isError: boolean}> => {
         try {
             const marketCap = await this.#getMarketCap(stock);
             const incomeData = await this.#getIncomeData(stock);
             const balanceData = await this.#getBalanceData(stock);
+            const price = await this.#getCurrentPrice(stock);
+            const pricePerBook = await this.#getPricePerBook(stock);
 
             return {
                 income: incomeData,
                 balance: balanceData,
-                marketCap: marketCap
+                marketCap: marketCap,
+                price,
+                pricePerBook
             } as FinancialInterface;
         } catch (error) {
             logger.error(`SERVICE[${this.signature}]: Error while getting financial data: ${error}`);

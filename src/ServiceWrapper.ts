@@ -1,4 +1,4 @@
-import Stock from "./Stock";
+import Stock, {FinancialInterface} from "./Stock";
 import FinvizService, { finvizStock } from "./services/FinvizService";
 import YahooService from "./services/YahooService";
 import { listType } from "./types";
@@ -77,41 +77,58 @@ export default class ServiceWrapper implements ServiceWrapperInterface {
         }
     }
 
+    updateStock = async (name: String) => {
+        const stock = await StockModel.findOne({ name: name });
+
+        if(! stock) {
+            return null;
+        }
+
+        const financialData = await this.yahooService.getFinancialData(stock.name);
+        if('isError' in financialData) {
+            logger.info(`[SERVICE-WRAPPER]: Got null as financial data for ${stock.name}`);
+            stock.failed = true;
+            stock.error_msg = financialData.message.toString();
+
+            closeBrowser();
+        }else{
+            const financials = {
+                income: (financialData as FinancialInterface).income,
+                balance: (financialData as FinancialInterface).balance,
+                marketCap: (financialData as FinancialInterface).marketCap,
+            };
+            stock.set('price', financialData.price);
+            stock.set('pricePerBook', financialData.pricePerBook);
+            stock.set('financials', financials);
+            const computedEligibility = Stock.getEligibility(financials);
+            const computedIncomePercentages = Stock.getIncomePercentage(financials);
+
+            if(computedEligibility && computedIncomePercentages) {
+                const eligibleListTypes = Stock.getListTypes(computedEligibility);
+                stock.set('computed', {...computedEligibility, ...computedIncomePercentages});
+                stock.set('list', eligibleListTypes);
+            }
+
+            stock.failed = false;
+            stock.error_msg = null;
+
+            logger.info(`[SERVICE-WRAPPER]: Updated stock "${stock.name}" from yahoo.`);
+        }
+
+        await stock.save();
+        BROWSER?.close();
+
+        return stock;
+    }
+
     updateStocks = async (onlyFailed: boolean = false) => {
         try {
             const stocks = await StockModel.find(onlyFailed ? { failed: true } : {});
             logger.info(`[SERVICE-WRAPPER]: Found ${stocks.length} stock to update.`);
 
             for (const stock of stocks) {
-                const financialData = await this.yahooService.getFinancialData(stock.name);
-                if('isError' in financialData) {
-                    logger.info(`[SERVICE-WRAPPER]: Got null as financial data for ${stock.name}`);
-                    stock.failed = true;
-                    stock.error_msg = financialData.message.toString();
-
-                    closeBrowser();
-                }else{
-                    stock.set('financials', financialData);
-                    const computedEligibility = Stock.getEligibility(financialData);
-                    const computedIncomePercentages = Stock.getIncomePercentage(financialData);
-    
-                    if(computedEligibility && computedIncomePercentages) {
-                        const eligibleListTypes = Stock.getListTypes(computedEligibility);
-                        stock.set('computed', {...computedEligibility, ...computedIncomePercentages});
-                        stock.set('list', eligibleListTypes);
-                    }
-
-                    stock.failed = false;
-                    stock.error_msg = null;
-     
-                    logger.info(`[SERVICE-WRAPPER]: Updated stock "${stock.name}" from yahoo.`);
-                }
-
-                await stock.save();
+                await this.updateStock(stock.name);
             }
-
-            logger.info(`[SERVICE-WRAPPER]: Finished updating all stocks from yahoo.`);
-            BROWSER?.close();
         } catch (error) {
             logger.info(`[SERVICE-WRAPPER-UPDATE-STOCKS]: ${error}`);
         }
@@ -175,7 +192,7 @@ export default class ServiceWrapper implements ServiceWrapperInterface {
 
             const percentOKWorksheet = workbook.addWorksheet('% OK');
             percentOKWorksheet.addRow([
-                'Név', 'Szektor', 'Össz %', '1. %', '2. %', '3. %', '4. %', '5. %', 'Market Cap', 'Total assets/Total Liabilities'
+                'Név', 'Szektor', 'Össz %', '1. %', '2. %', '3. %', '4. %', '5. %', 'Market Cap', 'Total assets/Total Liabilities', 'Price', 'Price/Book'
             ]);
 
             okStocks
@@ -197,7 +214,9 @@ export default class ServiceWrapper implements ServiceWrapperInterface {
                         stock.computed?.income?.avgPercentage,
                         ...stock.computed?.income?.annualPercentages || new Array(5).fill(" "),
                         stock.financials?.marketCap,
-                        lastYearLiabilities === 0 ? null : lastYearAssets / lastYearLiabilities
+                        lastYearLiabilities === 0 ? null : lastYearAssets / lastYearLiabilities,
+                        stock.price,
+                        stock.pricePerBook,
                     ]);
                 });
 

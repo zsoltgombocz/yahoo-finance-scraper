@@ -23,6 +23,15 @@ router.get("/stock/:name", async (req: Request, res: Response): Promise<Response
     return res.status(200).json(stock);
 });
 
+router.get("/stock/:name/scrape", async (req: Request, res: Response): Promise<Response> => {
+    const yahooService = await new YahooService(process.env.YAHOO_FINANCE_URL).create();
+    const serviceWrapper = new ServiceWrapper({} as FinvizService, yahooService);
+
+    const stock = await serviceWrapper.updateStock(req.params.name);
+
+    return res.status(200).json(stock);
+});
+
 router.get("/stocks/update-failed", async (_: Request, res: Response): Promise<Response> => {
     const yahooService = await new YahooService(process.env.YAHOO_FINANCE_URL).create();
     const serviceWrapper = new ServiceWrapper({} as FinvizService, yahooService);

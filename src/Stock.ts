@@ -8,6 +8,8 @@ export interface FinancialInterface {
     };
     income?: IncomeInterface[];
     marketCap?: number;
+    price?: Number;
+    pricePerBook?: Number;
 }
 
 export interface BalanceInterface {

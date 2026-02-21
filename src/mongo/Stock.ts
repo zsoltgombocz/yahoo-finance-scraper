@@ -46,6 +46,8 @@ const StockSchema = new Schema({
     name: { type: String, required: true, unique: true },
     country: { type: String, default: null },
     sector: { type: String, default: null },
+    price: { type: Number },
+    pricePerBook: { type: Number },
     financials: { type: FinancialSchema, default: null },
     computed: { type: ComputedSchema, default: null },
     list: { type: [String], enum: Object.values(listType), required: true },
