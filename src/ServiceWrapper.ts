@@ -86,11 +86,9 @@ export default class ServiceWrapper implements ServiceWrapperInterface {
 
         const financialData = await this.yahooService.getFinancialData(stock.name);
         if('isError' in financialData) {
-            logger.info(`[SERVICE-WRAPPER]: Got null as financial data for ${stock.name}`);
-            stock.failed = true;
             stock.error_msg = financialData.message.toString();
-
-            closeBrowser();
+            stock.failed = true;
+            logger.info(`[SERVICE-WRAPPER]: Got null as financial data for ${stock.name}. Message: ${stock.error_msg}`);
         }else{
             const financials = {
                 income: (financialData as FinancialInterface).income,
@@ -116,7 +114,7 @@ export default class ServiceWrapper implements ServiceWrapperInterface {
         }
 
         await stock.save();
-        await BROWSER?.close();
+        await closeBrowser();
 
         return stock;
     }
