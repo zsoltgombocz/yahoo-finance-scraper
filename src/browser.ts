@@ -71,7 +71,7 @@ export const getPage = (url: string): Promise<Page> => {
     })
 }
 
-export const closeBrowser = () => {
-    BROWSER?.close();
+export const closeBrowser = async () => {
+    await BROWSER?.close();
     BROWSER = null;
 }
