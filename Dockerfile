@@ -16,8 +16,6 @@ RUN apt-get install -yyq supervisor
 
 RUN apt-get install -yyq nano
 
-RUN echo "0 0 18 * * /etc/cron.d/send-to-discord >> /var/log/send-to-discord.log 2>&1"
-
 WORKDIR /app
 COPY package*.json .
 
