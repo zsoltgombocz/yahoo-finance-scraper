@@ -116,7 +116,7 @@ export default class ServiceWrapper implements ServiceWrapperInterface {
         }
 
         await stock.save();
-        BROWSER?.close();
+        await BROWSER?.close();
 
         return stock;
     }
