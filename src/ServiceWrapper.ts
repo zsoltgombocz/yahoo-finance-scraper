@@ -165,7 +165,7 @@ export default class ServiceWrapper implements ServiceWrapperInterface {
 
             const percentWorksheet = workbook.addWorksheet('%');
             percentWorksheet.addRow([
-                'Név', 'Szektor', 'Össz %', '1. %', '2. %', '3. %', '4. %', '5. %', 'Market Cap', 'Total assets/Total Liabilities'
+                'Név', 'Szektor', 'Össz %', '1. %', '2. %', '3. %', '4. %', '5. %', 'Market Cap', 'Total assets/Total Liabilities', 'Price', 'Price/Book'
             ]);
 
             okStocks.forEach(stock => {
@@ -186,7 +186,9 @@ export default class ServiceWrapper implements ServiceWrapperInterface {
                     stock.computed?.income?.avgPercentage,
                     ...incomePercentageRows,
                     stock.financials?.marketCap,
-                    lastYearLiabilities === 0 ? null : lastYearAssets / lastYearLiabilities
+                    lastYearLiabilities === 0 ? null : lastYearAssets / lastYearLiabilities,
+                    stock.price,
+                    stock.pricePerBook,
                 ]);
             });
 
